@@ -26,51 +26,41 @@ namespace FirstProjectinCSHARP
         // The database we will create
         private Database database;
 
-        // The container we will create.
-        private Container container;
+        // The containers we will create.
+        //container1 = USER; container2 = MANAGER; container3 = SHOPPINGITEM
+        private Container container1, container2, container3;
 
+        // The name of the database and container
+        private string databaseId = "ShoppingDatabase";
+        private string containerId1 = "USER";
+        private string containerId2 = "MANAGER";
+        private string containerId3 = "SHOPPINGITEM";
 
         public static async Task Main(string[] args)
         {
-
-
-            /*===============THIS IS FOR CONNECTING IN AZURE================
-             try
-             {
-                 Console.WriteLine("Beginning operations...\n");
-                 Program p = new Program();
-                 await p.EstablishConnection();
-
-             }
-             catch (CosmosException de)
-             {
-                 Exception baseException = de.GetBaseException();
-                 Console.WriteLine("{0} error occurred: {1}", de.StatusCode, de);
-             }
-             catch (Exception e)
-             {
-                 Console.WriteLine("Error: {0}", e);
-             }
-          .   finally
-             {
-                 Console.WriteLine("End of demo, press any key to exit.");
-                 Console.ReadKey();
-             }                                                             
-             ==============================================================
-            */
-
-            ShowIndex();
+           
+                Program p = new Program();
+                //Establish connection to the Azure service
+                await p.EstablishConnection();
+                await p.ShowIndex();
 
         }
-
+        
         public async Task EstablishConnection()
         {
             // Create a new instance of the Cosmos Client
             this.cosmosClient = new CosmosClient(EndpointUri, PrimaryKey);
 
-        }
+            //Create a new database called ShoppingDatabase
+            this.database = await this.cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId);
 
-        public static void ShowIndex()
+            //Create containers for each classes
+            this.container1 = await this.database.CreateContainerIfNotExistsAsync(containerId1, "/LastName");
+            this.container2 = await this.database.CreateContainerIfNotExistsAsync(containerId2, "/LastName");
+            this.container3 = await this.database.CreateContainerIfNotExistsAsync(containerId3, "/category");
+
+        }
+        public async Task ShowIndex()
         {
             Console.WriteLine("\t\t\t\t\tAMAZONE");
             Console.WriteLine("\t\t\t\t\"Like Amazon but Crappier\"");
@@ -88,12 +78,12 @@ namespace FirstProjectinCSHARP
            
             {
                 case 1:
-                    Register();
                     Console.Clear();
+                    await this.Register();
                     break;
                 case 2:
-                    //Login();
                     Console.Clear();
+                    await this.Login();
                     break;
                 default:
                     System.Environment.Exit(1);
@@ -101,9 +91,118 @@ namespace FirstProjectinCSHARP
             }
         }
 
-        public static void Register()
+        //Registration Part of the Program
+        public async Task Register()
+        {
+            User account = new User();
+
+            Console.WriteLine("\nUSER REGISTRATION");
+            Console.WriteLine("==================================================================================\n");
+
+            Console.Write("Username: ");
+            account.UserName = Console.ReadLine();
+
+            Console.Write("Password: ");
+            account.password = Console.ReadLine();
+
+            Console.Write("First Name: ");
+            account.FirstName = Console.ReadLine();
+
+            Console.Write("Last Name: ");
+            account.LastName = Console.ReadLine();
+
+            Console.Write("Age: ");
+            account.age = Convert.ToInt32(Console.ReadLine());
+
+            Console.Write("Email Address: ");
+            account.EmailAdd = Console.ReadLine();
+
+            Console.Write("Physical Address: ");
+            account.PhyAdd = Console.ReadLine();
+
+            account.Id = account.UserName;
+
+            Console.WriteLine("\n\nSetting up Account... Please Wait...");
+
+            try
+            {
+                //Check to see if the account already exist
+                ItemResponse<User> UserResponse = await this.container1.ReadItemAsync<User>(account.UserName, new PartitionKey(account.LastName));
+                Console.WriteLine("\n\nThe username is already taken. Please Try again.\nPress any key to continue.");
+                Console.ReadKey();
+                Console.Clear();
+                await this.Register();
+            }
+
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+
+                // Create an item in the container with account; Partition key will be Username of the account
+                ItemResponse<User> UserResponse = await this.container1.CreateItemAsync<User>(account, new PartitionKey(account.LastName));
+
+            }
+
+            Console.Write("\n\nYou have successfully created your account.\n Press any key to continue.");
+            Console.ReadKey();
+
+            Console.Clear();
+            await this.ShowIndex();
+        }
+
+        //Login part of the Program
+        public async Task Login()
         {
 
+            string username, password;
+
+            Console.WriteLine("\nLOGIN PAGE");
+            Console.WriteLine("==================================================================================\n");
+
+            Console.Write("\t\t\tUsername: ");
+            username = Console.ReadLine();
+
+            Console.Write("\t\t\tPassword: ");
+            password = Console.ReadLine();
+
+            string checkPass = "SELECT * FROM c WHERE c.UserName = '" + username + "'";
+
+            QueryDefinition queryDefinition = new QueryDefinition(checkPass);
+            FeedIterator<User> queryResultSetIterator = this.container1.GetItemQueryIterator<User>(queryDefinition);
+
+
+            FeedResponse<User> currentResult = await queryResultSetIterator.ReadNextAsync();
+
+            User testUser = new User();
+
+            //If the given password is not the same as that of the value in the JSON document
+
+            //since this is only 1
+            foreach (User user in currentResult)
+                testUser = user;
+
+            if (testUser.password == password)
+            {
+                Console.Clear();
+                this.LoginUser();
+            }
+
+            else
+            {
+
+                Console.WriteLine("\n\nInvalid password for the given username. Please try again.");
+                System.Threading.Thread.Sleep(4000);
+                Console.Clear();
+                await this.Login();
+            }
         }
+
+        public void LoginUser() {
+
+            Console.WriteLine("\nLOGIN PAGE");
+            Console.WriteLine("==================================================================================\n");
+
+
+        }
+        public void LoginManager() { }
     }
 }
