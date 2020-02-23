@@ -21,5 +21,23 @@ namespace FirstProjectinCSHARP
         public string PhyAdd { get; set; }
         public int age { get; set; }
         public List<ShoppingItem> ShoppingCart { get; set; } = null;
+
+        //For testing purposes 
+        public override string ToString()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
+        public bool isManager { get; set; }
+
+        public void showProfile()
+        {
+            Console.WriteLine("\t\t [1]      Username: " + UserName);
+            Console.WriteLine("\t\t [2]      Password: " + password);
+            Console.WriteLine("\t\t [3]    First Name: " + FirstName);
+            Console.WriteLine("\t\t [4]     Last Name: " + LastName);
+            Console.WriteLine("\t\t [5] Email Address: " + EmailAdd);
+            Console.WriteLine("\t\t [6]           Age: " + age);
+            
+        }
     }
 }
