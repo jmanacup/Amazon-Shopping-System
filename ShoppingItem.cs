@@ -16,6 +16,10 @@ namespace FirstProjectinCSHARP
         public string category { get; set; }
         public double price { get; set; }
         public int quantity { get; set; }
-        
+        public override string ToString()
+        {
+            string presentItem = String.Format("{0,10}\t\t\t{1,10}\t\t\t{2,7}\t\t\t{3,7}", ItemName, category, price, quantity);
+            return presentItem;
+        }
     }
 }

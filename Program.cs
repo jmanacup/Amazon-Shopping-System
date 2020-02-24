@@ -165,7 +165,7 @@ namespace FirstProjectinCSHARP
             Console.Write("\t\t\tPassword: ");
             password = Console.ReadLine();
 
-            Console.WriteLine("\n\nLogging in... Please wait....");
+            Console.Write("\n\nLogging in... Please wait....");
             string checkPass = "SELECT * FROM c WHERE c.UserName = '" + username + "'";
 
             QueryDefinition queryDefinition = new QueryDefinition(checkPass);
@@ -202,6 +202,8 @@ namespace FirstProjectinCSHARP
                 await this.Login();
             }
         }
+
+        //Login part of the User
         public async Task LoginUser(User account) {
 
             Console.WriteLine("\nHOME PAGE");
@@ -226,18 +228,22 @@ namespace FirstProjectinCSHARP
                     break;
                 case 2:
                     Console.Clear();
-                    BrowseProduct();
+                    await BrowseProduct(account);
                     break;
                 case 3:
                     Console.Clear();
-                    ShoppingCart();
+                    await ShoppingCart(account);
                     break;
                 default:
-                    System.Environment.Exit(1);
+                    Console.WriteLine("Logging out....");
+                    System.Threading.Thread.Sleep(4000);
+                    Console.Clear();
+                    await ShowIndex();
                     break;
-
             }
         }
+
+        //Login part of the Manager
         public async Task LoginManager(User account) {
 
             Console.WriteLine("\nHOME PAGE (MANAGER)");
@@ -267,14 +273,17 @@ namespace FirstProjectinCSHARP
                     break;
                 case 3:
                     Console.Clear();
-                    BrowseProduct();
+                    await BrowseProduct(account);
                     break;
                 case 4:
                     Console.Clear();
-                    ShoppingCart();
+                    await ShoppingCart(account);
                     break;
                 default:
-                    System.Environment.Exit(1);
+                    Console.WriteLine("Logging out....");
+                    System.Threading.Thread.Sleep(4000);
+                    Console.Clear();
+                    await ShowIndex();
                     break;
             }
 
@@ -285,7 +294,7 @@ namespace FirstProjectinCSHARP
             Console.WriteLine("==================================================================================\n");
 
             account.showProfile();
-            Console.WriteLine("\t\t [7] Back to Home :");
+            Console.WriteLine("\t\t [7] Back to Home");
             Console.WriteLine("\nWhich one do you want to change?");
             Console.Write("\n\nType your response here: ");
             int ans = Convert.ToInt32(Console.ReadLine());
@@ -341,13 +350,143 @@ namespace FirstProjectinCSHARP
                 await LoginUser(account);
 
         }
-        public void BrowseProduct() {
+        public async Task BrowseProduct(User account) {
 
             Console.WriteLine("\nBROWSE PRODUCT");
-            Console.WriteLine("==================================================================================\n");
+            Console.WriteLine("=================================================================================================\n");
+
+            string header = String.Format("{0,10}\t\t\t{1,15}\t\t\t{2,7}\t\t\t{3,7}", "Item Name", "Category", "Price", "Quantity");
+            Console.WriteLine(header + "\n");
+            string sqlQueryText = "SELECT * FROM c";
+
+            QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+            FeedIterator<ShoppingItem> queryResultSetIterator = this.container2.GetItemQueryIterator<ShoppingItem>(queryDefinition);
+
+            List<ShoppingItem> itemsAvailable = new List<ShoppingItem>();
+
+            while (queryResultSetIterator.HasMoreResults)
+            {
+                FeedResponse<ShoppingItem> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+
+                foreach (ShoppingItem item in currentResultSet) {
+                    itemsAvailable.Add(item);
+                    Console.WriteLine(item);
+                 }
+            }
+
+            string ans = "";
+            do {
+                if (!(itemsAvailable.Exists(x => x.ItemName == ans)) && ans != "")
+                    Console.WriteLine("The item is not found in the store. Please Try again.");
+
+                Console.Write("\nType in the item name that you want to purchase (0 to go back to main page): ");
+                ans = Console.ReadLine();
+
+            } while (!(itemsAvailable.Exists(x => x.ItemName == ans)) && ans !="0");//goes through the loop everytime the input item is not in the store
+
+            if (ans == "0")
+            {
+                Console.WriteLine("Going back to main page... Please wait....");
+                System.Threading.Thread.Sleep(4000);
+                Console.Clear();
+                if (account.isManager)
+                    await this.LoginManager(account);
+                else
+                    await this.LoginUser(account);
+            }
+
+            else
+            {
+
+
+                //get the specific item in the list
+                ShoppingItem itemFound = itemsAvailable.Find(x => x.ItemName == ans);
+
+                ItemResponse<ShoppingItem> gotData = await this.container2.ReadItemAsync<ShoppingItem>(ans, new PartitionKey(itemFound.category));
+                ShoppingItem itemBody = gotData.Resource;
+
+                //This will store the item that the user has bought
+                ShoppingItem itemForShopper = new ShoppingItem();
+
+                Console.WriteLine("You have chosen " + ans);
+
+                itemForShopper.ItemName = ans;
+
+                //constants for the shopping item
+                itemForShopper.Id = itemForShopper.ItemName;
+                itemForShopper.price = itemBody.price;
+                itemForShopper.category = itemBody.category;
+
+                Console.Write("\nInsert the quantity you want to purchase: ");
+                Console.Write("Adding to cart... Please wait...");
+                itemForShopper.quantity = Convert.ToInt32(Console.ReadLine());
+
+                //subtracting the quantity of the item
+                itemBody.quantity -= itemForShopper.quantity;
+
+                //add the item in the shopping cart for the account
+                ItemResponse<User> gotUser = await this.container1.ReadItemAsync<User>(account.Id, new PartitionKey(account.LastName));
+                User userFromDb = gotUser.Resource;
+
+                userFromDb.ShoppingCart.Add(itemForShopper);
+
+                //update the shopping cart of the user
+                await this.container1.ReplaceItemAsync<User>(userFromDb, userFromDb.Id, new PartitionKey(userFromDb.LastName));
+                //update the quantity of the product
+                await this.container2.ReplaceItemAsync<ShoppingItem>(itemBody, itemBody.Id, new PartitionKey(itemBody.category));
+
+                Console.WriteLine("You have successfully purchased " + itemForShopper.quantity + " " + itemForShopper.ItemName);
+
+                Console.Write("\n Going back to home page... please wait.....");
+                System.Threading.Thread.Sleep(6000);
+                Console.Clear();
+                await this.BrowseProduct(account);
+            }
 
         }
-        public void ShoppingCart() { }
+        public async Task ShoppingCart(User account)
+        {
+
+            Console.WriteLine("\nMY SHOPPING CART");
+            Console.WriteLine("=================================================================================================\n");
+
+            string header = String.Format("{0,10}\t\t\t{1,15}\t\t\t{2,7}\t\t\t{3,7}", "Item Name", "Category", "Price", "Quantity");
+            Console.WriteLine(header + "\n");
+
+            ItemResponse<User> gotUser = await this.container1.ReadItemAsync<User>(account.Id, new PartitionKey(account.LastName));
+            User userFromDb = gotUser.Resource;
+
+            if (userFromDb.ShoppingCart.Count == 0)
+            {
+                Console.WriteLine("\nYou have not purchased anything yet in the store. Redirecting to the main page... Please wait....");
+                System.Threading.Thread.Sleep(6000);
+                Console.Clear();
+                if (account.isManager)
+                    await this.LoginManager(account);
+                else
+                    await this.LoginUser(account);
+
+            }
+            else
+            {
+                double total = 0;
+                foreach (ShoppingItem item in userFromDb.ShoppingCart) { 
+                    Console.WriteLine(item);
+                    total += (item.price * item.quantity);
+                }
+
+                Console.WriteLine("\n\n\nYour total is: " + total + " dollars.");
+            }
+
+            Console.Write("\n\nPress any key to go back to the main page...");
+            Console.ReadKey();
+            Console.Clear();
+            if (account.isManager)
+                await LoginManager(account);
+            else
+                await LoginUser(account);
+
+        }
         public async Task ManageItem(User account) {
 
             Console.WriteLine("\nMANAGE ITEMS");
@@ -405,6 +544,7 @@ namespace FirstProjectinCSHARP
                     Console.Write("\nInsert name of the item you want to be deleted: ");
                     string itemName = Console.ReadLine();
 
+                    
                     string checkItemName = "SELECT * FROM c WHERE c.ItemName = '" + itemName + "'";
                     QueryDefinition queryDefinition = new QueryDefinition(checkItemName);
                     FeedIterator<ShoppingItem> queryResultSetIterator = this.container2.GetItemQueryIterator<ShoppingItem>(queryDefinition);
@@ -415,7 +555,7 @@ namespace FirstProjectinCSHARP
 
                         foreach (ShoppingItem itemRetrieved in currentResult)
                             gotItem = itemRetrieved;
-
+                            
                         await this.container2.DeleteItemAsync<ShoppingItem>(itemName, new PartitionKey(gotItem.category));
                         Console.WriteLine("\n The item " + itemName + " has been successfully deleted. Redirecting to Manage Items...");
                     }

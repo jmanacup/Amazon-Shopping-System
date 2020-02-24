@@ -20,15 +20,8 @@ namespace FirstProjectinCSHARP
         public string EmailAdd { get; set; }
         public string PhyAdd { get; set; }
         public int age { get; set; }
-        public List<ShoppingItem> ShoppingCart { get; set; } = null;
-
-        //For testing purposes 
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public List<ShoppingItem> ShoppingCart { get; set; } = new List<ShoppingItem>();
         public bool isManager { get; set; }
-
         public void showProfile()
         {
             Console.WriteLine("\t\t [1]      Username: " + UserName);
@@ -38,6 +31,11 @@ namespace FirstProjectinCSHARP
             Console.WriteLine("\t\t [5] Email Address: " + EmailAdd);
             Console.WriteLine("\t\t [6]           Age: " + age);
             
+        }
+
+        public override string ToString()
+        {
+           return JsonConvert.SerializeObject(this);
         }
     }
 }
