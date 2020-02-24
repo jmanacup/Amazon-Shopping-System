@@ -294,7 +294,7 @@ namespace FirstProjectinCSHARP
             Console.WriteLine("==================================================================================\n");
 
             account.showProfile();
-            Console.WriteLine("\t\t [7] Back to Home");
+            Console.WriteLine("\t\t [8] Back to Home");
             Console.WriteLine("\nWhich one do you want to change?");
             Console.Write("\n\nType your response here: ");
             int ans = Convert.ToInt32(Console.ReadLine());
@@ -329,6 +329,10 @@ namespace FirstProjectinCSHARP
                     Console.Write("\nType in your new Physical Address here:  ");
                     gotAccount.PhyAdd = Console.ReadLine();
                     break;
+                case 7:
+                    Console.Write("\nType in your new age here:  ");
+                    gotAccount.age = Convert.ToInt32(Console.ReadLine());
+                    break;
                 default:
                     Console.WriteLine("\nRedirecting to main page....");
                     System.Threading.Thread.Sleep(4000);
@@ -341,9 +345,9 @@ namespace FirstProjectinCSHARP
             }
 
             dataResponse = await this.container1.ReplaceItemAsync<User>(gotAccount, gotAccount.Id, new PartitionKey(account.LastName));
-            Console.WriteLine("Changes are successfully made.");
+            Console.WriteLine("\nChanges are successfully made.");
             System.Threading.Thread.Sleep(4000);
-
+            Console.Clear();
             if (account.isManager)
                 await LoginManager(account);
             else
@@ -397,8 +401,6 @@ namespace FirstProjectinCSHARP
 
             else
             {
-
-
                 //get the specific item in the list
                 ShoppingItem itemFound = itemsAvailable.Find(x => x.ItemName == ans);
 
@@ -418,8 +420,10 @@ namespace FirstProjectinCSHARP
                 itemForShopper.category = itemBody.category;
 
                 Console.Write("\nInsert the quantity you want to purchase: ");
-                Console.Write("Adding to cart... Please wait...");
                 itemForShopper.quantity = Convert.ToInt32(Console.ReadLine());
+
+                Console.Write("Adding to cart... Please wait...");
+                
 
                 //subtracting the quantity of the item
                 itemBody.quantity -= itemForShopper.quantity;
@@ -435,9 +439,9 @@ namespace FirstProjectinCSHARP
                 //update the quantity of the product
                 await this.container2.ReplaceItemAsync<ShoppingItem>(itemBody, itemBody.Id, new PartitionKey(itemBody.category));
 
-                Console.WriteLine("You have successfully purchased " + itemForShopper.quantity + " " + itemForShopper.ItemName);
+                Console.WriteLine("\nYou have successfully purchased " + itemForShopper.quantity + " " + itemForShopper.ItemName);
 
-                Console.Write("\n Going back to home page... please wait.....");
+                Console.Write("\n Refreshing page... please wait.....");
                 System.Threading.Thread.Sleep(6000);
                 Console.Clear();
                 await this.BrowseProduct(account);

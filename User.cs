@@ -24,13 +24,14 @@ namespace FirstProjectinCSHARP
         public bool isManager { get; set; }
         public void showProfile()
         {
-            Console.WriteLine("\t\t [1]      Username: " + UserName);
-            Console.WriteLine("\t\t [2]      Password: " + password);
-            Console.WriteLine("\t\t [3]    First Name: " + FirstName);
-            Console.WriteLine("\t\t [4]     Last Name: " + LastName);
-            Console.WriteLine("\t\t [5] Email Address: " + EmailAdd);
-            Console.WriteLine("\t\t [6]           Age: " + age);
-            
+            Console.WriteLine("\t\t [1]       Username: " + UserName);
+            Console.WriteLine("\t\t [2]        Password: " + password);
+            Console.WriteLine("\t\t [3]      First Name: " + FirstName);
+            Console.WriteLine("\t\t [4]       Last Name: " + LastName);
+            Console.WriteLine("\t\t [5]   Email Address: " + EmailAdd);
+            Console.WriteLine("\t\t [6]Physical Address: " + PhyAdd);
+            Console.WriteLine("\t\t [7]             Age: " + age);
+
         }
 
         public override string ToString()
