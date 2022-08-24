@@ -37,7 +37,7 @@ namespace FirstProjectinCSHARP
 
         public static async Task Main(string[] args)
         {
-           
+
                 Program p = new Program();
                 //Establish connection to the Azure service
                 await p.EstablishConnection();
@@ -62,8 +62,8 @@ namespace FirstProjectinCSHARP
         }
         public async Task ShowIndex()
         {
-            Console.WriteLine("\t\t\t\t\tAMAZONE");
-            Console.WriteLine("\t\t\t\t\"Like Amazon but Crappier\"");
+            Console.WriteLine("\t\t\t\t\tAmazing Shopping System");
+            Console.WriteLine("\t\t\t\t\"We got stuff!\"");
             Console.WriteLine("==================================================================================\n");
             Console.WriteLine("\t\t\t\tWhat do you want to do?\n");
             Console.WriteLine("\t\t[1] Register an Account");
@@ -75,7 +75,7 @@ namespace FirstProjectinCSHARP
 
             //choices designated to their specific method call/action
             switch (ans) 
-           
+            
             {
                 case 1:
                     Console.Clear();
@@ -186,7 +186,6 @@ namespace FirstProjectinCSHARP
             {
                 Console.Clear();
 
-              
                 if (testUser.isManager)
                     await this.LoginManager(testUser); //manager login
                 else
@@ -375,7 +374,7 @@ namespace FirstProjectinCSHARP
                 foreach (ShoppingItem item in currentResultSet) {
                     itemsAvailable.Add(item);
                     Console.WriteLine(item);
-                 }
+                }
             }
 
             string ans = "";
